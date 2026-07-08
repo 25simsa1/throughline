@@ -17,6 +17,8 @@ class EpubLoader(Loader):
         book = epub.read_epub(str(path))
         segments = []
         for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+            if isinstance(item, epub.EpubNav):
+                continue
             soup = BeautifulSoup(item.get_content(), "html.parser")
             text = soup.get_text(separator=" ", strip=True)
             if text:
