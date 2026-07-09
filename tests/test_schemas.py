@@ -26,3 +26,21 @@ def test_connection_requires_tensions_and_evidence():
     errs = schemas.validate_connection(c)
     assert any("tensions" in e for e in errs)
     assert any("evidence" in e for e in errs)
+
+
+def test_connection_with_non_dict_evidence_does_not_crash():
+    c = {"id": "c1", "move": "m", "sources_involved": ["a"],
+         "interpretation": "i", "evidence": ["not-a-dict"],
+         "advances_thesis": "t", "tensions": "x"}
+    errs = schemas.validate_connection(c)
+    assert any("evidence[0]" in e for e in errs)
+
+
+def test_validate_units_reports_index_prefixed_errors():
+    units = [
+        {"source_id": "s", "kind": "claim", "statement": "x", "quote": "q", "loc": "p.1"},
+        {"source_id": "s", "kind": "claim", "statement": "x"},  # missing quote + loc
+    ]
+    errs = schemas.validate_units(units)
+    assert errs  # non-empty
+    assert all(e.startswith("[1]") for e in errs)  # only the second unit is invalid

@@ -32,6 +32,9 @@ def validate_connection(c: dict) -> list[str]:
         if key not in c or c[key] in (None, "", []):
             errs.append(f"connection missing required field {key!r}")
     for j, ev in enumerate(c.get("evidence", []) or []):
+        if not isinstance(ev, dict):
+            errs.append(f"evidence[{j}] is not an object")
+            continue
         for key in ("source_id", "quote", "loc"):
             if not ev.get(key):
                 errs.append(f"evidence[{j}] missing {key!r}")
