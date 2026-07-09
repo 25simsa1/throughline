@@ -47,6 +47,7 @@ def verify_units_file(chapter_dir: Path, source_id: str) -> dict:
             elif claimed != real_loc:
                 u["loc"] = real_loc
                 u["loc_corrected"] = True
+                # once flagged, loc_corrected stays as a permanent audit trail
         verified += 1 if u["verified"] else 0
     store.save_units(chapter_dir, source_id, units)
     return {"verified": verified, "unverified": len(units) - verified}

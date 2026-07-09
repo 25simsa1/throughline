@@ -84,3 +84,16 @@ def test_verify_report_flags_unverified_evidence(tmp_path):
     ev = written["connections"][0]["evidence"]
     assert ev[0]["verified"] is True
     assert ev[1]["verified"] is False
+
+
+def test_verify_report_handles_null_connections(tmp_path):
+    _seed(tmp_path)
+    (tmp_path / "report.json").write_text(json.dumps({"connections": None}), encoding="utf-8")
+    assert verify.verify_report_file(tmp_path) == {"unverified_evidence": 0}
+
+
+def test_verify_report_handles_null_evidence(tmp_path):
+    _seed(tmp_path)
+    report = {"connections": [{"id": "c1", "evidence": None}]}
+    (tmp_path / "report.json").write_text(json.dumps(report), encoding="utf-8")
+    assert verify.verify_report_file(tmp_path) == {"unverified_evidence": 0}
