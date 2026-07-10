@@ -43,7 +43,17 @@ def ingest_chapter(chapter_dir: Path) -> list[store.Source]:
         except LoaderError:
             skipped.append(path.name)
             continue
-        src = loader.load(path, source_id)
+        try:
+            src = loader.load(path, source_id)
+        except Exception as e:  # a corrupt/unreadable file should not abort the whole run
+            skipped.append(f"{path.name} ({e.__class__.__name__})")
+            continue
+        if not src.segments:
+            print(
+                f"warning: {path.name} produced no extractable text "
+                f"(a scanned or image PDF must be added as image files for OCR)",
+                file=sys.stderr,
+            )
         overrides = meta.get(source_id, {})
         for key in ("title", "author", "year", "venue", "type"):
             if key in overrides:

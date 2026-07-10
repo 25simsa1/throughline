@@ -51,3 +51,23 @@ def test_ingest_raises_on_malformed_meta(tmp_path):
     (sources / "meta.json").write_text("{not valid json", encoding="utf-8")
     with pytest.raises(ingest.IngestError):
         ingest.ingest_chapter(chapter)
+
+
+def test_ingest_warns_on_empty_source(tmp_path, capsys):
+    chapter = tmp_path / "chapter1"
+    sources = chapter / "sources"
+    sources.mkdir(parents=True)
+    (sources / "empty.md").write_text("   \n\n  \n", encoding="utf-8")
+    result = ingest.ingest_chapter(chapter)
+    assert len(result) == 1
+    assert "no extractable text" in capsys.readouterr().err
+
+def test_ingest_skips_corrupt_pdf(tmp_path, capsys):
+    chapter = tmp_path / "chapter1"
+    sources = chapter / "sources"
+    sources.mkdir(parents=True)
+    (sources / "a.md").write_text("One.\n\nTwo.\n", encoding="utf-8")
+    (sources / "bad.pdf").write_text("this is not a real pdf", encoding="utf-8")
+    result = ingest.ingest_chapter(chapter)
+    assert [s.source_id for s in result] == ["a"]
+    assert "bad.pdf" in capsys.readouterr().err
