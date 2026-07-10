@@ -23,7 +23,7 @@ Resolve `<chapter>` to `chapters/<chapter>`. Always read `rubric.md` and every f
 3. For each source, produce a JSON array of units. Each unit is an object with `source_id`, `kind` (one of claim, concept, quote), `statement`, `quote` (verbatim from a segment), `loc` (copy the segment loc), and `theme_tags`.
 4. Only use text that appears verbatim in the segments for `quote`. Never paraphrase inside a quote.
 5. Write each array to `store/<source_id>.units.json`.
-6. Run `python throughline.py verify <chapter>`. If any unit is UNVERIFIED, open the units file, fix or drop the offending quote, and rerun verify until zero are UNVERIFIED.
+6. Run `python throughline.py verify <chapter>`. If any unit is UNVERIFIED, open the units file, fix or drop the offending quote, and rerun verify until zero are UNVERIFIED. Verify also reports shape errors such as a unit missing a required field or a bad kind, so fix any shape errors before finishing.
 
 ## connect
 
@@ -31,7 +31,7 @@ Resolve `<chapter>` to `chapters/<chapter>`. Always read `rubric.md` and every f
 2. Propose candidate cross-source connections that serve the thesis. Follow the rubric. Prefer connections that span disciplines and that the units genuinely support.
 3. For each connection, produce an object with `id`, `move`, `sources_involved`, `interpretation`, `evidence` (a list of objects with `source_id`, `quote`, `loc`, drawn only from verified units), `advances_thesis`, `tensions` (required, name where the connection strains), `novelty` (0 to 1), `confidence` (0 to 1), `status` set to "candidate", and an empty `scholar_note`.
 4. Write all connections to `report.json` under the key `connections`, and render a readable `report.md` from the same data. Each connection's block in report.md ends with a line `Decision: candidate`. The scholar will edit report.md and change this to `keep` or `drop`. (report.json remains the machine record with evidence.)
-5. Run `python throughline.py verify <chapter>`. Fix any UNVERIFIED evidence before finishing.
+5. Run `python throughline.py verify <chapter>`. Fix any UNVERIFIED evidence before finishing. Verify also reports shape errors such as a connection missing tensions, so fix any shape errors before finishing.
 
 ## select
 

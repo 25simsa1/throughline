@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
 import ingest
+import schemas
 import store
 import verify
 
@@ -44,21 +46,35 @@ def cmd_ingest(args) -> int:
 def cmd_verify(args) -> int:
     ch = _chapter_dir(args.chapter)
     if not (ch / "store" / "segments.json").exists():
-        print(
-            f"error: chapter '{args.chapter}' not ingested yet; run 'ingest' first",
-            file=sys.stderr,
-        )
+        print(f"error: chapter '{args.chapter}' not ingested yet; run 'ingest' first", file=sys.stderr)
         return 1
+    shape_errors = 0
     for src in store.load_segments(ch):
-        if not (ch / "store" / f"{src.source_id}.units.json").exists():
+        units_path = ch / "store" / f"{src.source_id}.units.json"
+        if not units_path.exists():
             print(f"{src.source_id}: not extracted yet")
             continue
         r = verify.verify_units_file(ch, src.source_id)
         print(f"{src.source_id}: {r['verified']} verified, {r['unverified']} UNVERIFIED")
-    if (ch / "report.json").exists():
-        r = verify.verify_report_file(ch)
+        for e in schemas.validate_units(store.load_units(ch, src.source_id)):
+            print(f"{src.source_id}: shape error {e}", file=sys.stderr)
+            shape_errors += 1
+    report_path = ch / "report.json"
+    if report_path.exists():
+        try:
+            r = verify.verify_report_file(ch)
+        except json.JSONDecodeError as e:
+            print(f"error: report.json is not valid JSON: {e}", file=sys.stderr)
+            return 1
         print(f"report: {r['unverified_evidence']} UNVERIFIED evidence item(s)")
-    return 0
+        connections = json.loads(report_path.read_text(encoding="utf-8")).get("connections") or []
+        for c in connections:
+            cid = c.get("id", "?") if isinstance(c, dict) else "?"
+            errs = schemas.validate_connection(c) if isinstance(c, dict) else ["connection is not an object"]
+            for e in errs:
+                print(f"report connection {cid}: shape error {e}", file=sys.stderr)
+                shape_errors += 1
+    return 1 if shape_errors else 0
 
 
 def cmd_status(args) -> int:

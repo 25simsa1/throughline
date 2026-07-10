@@ -65,3 +65,27 @@ def test_new_seeds_rubric_and_gold(tmp_path: Path, monkeypatch):
     throughline.main(["new", "chapter1"])
     assert (tmp_path / "rubric.md").exists()
     assert (tmp_path / "gold").is_dir()
+
+
+def test_verify_reports_unit_shape_error(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    throughline.main(["new", "chapter1"])
+    (tmp_path / "chapters" / "chapter1" / "sources" / "a.md").write_text("One.\n\nTwo.\n", encoding="utf-8")
+    throughline.main(["ingest", "chapter1"])
+    import store as _store
+    ch = tmp_path / "chapters" / "chapter1"
+    _store.save_units(ch, "a", [
+        {"source_id": "a", "kind": "opinion", "statement": "s", "quote": "One.", "loc": "para.1"}])
+    rc = throughline.main(["verify", "chapter1"])
+    assert rc == 1
+    assert "shape error" in capsys.readouterr().err
+
+def test_verify_handles_malformed_report_json(tmp_path, monkeypatch, capsys):
+    monkeypatch.chdir(tmp_path)
+    throughline.main(["new", "chapter1"])
+    (tmp_path / "chapters" / "chapter1" / "sources" / "a.md").write_text("One.\n\nTwo.\n", encoding="utf-8")
+    throughline.main(["ingest", "chapter1"])
+    (tmp_path / "chapters" / "chapter1" / "report.json").write_text("{not json", encoding="utf-8")
+    rc = throughline.main(["verify", "chapter1"])
+    assert rc == 1
+    assert "not valid JSON" in capsys.readouterr().err
