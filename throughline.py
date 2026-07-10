@@ -22,6 +22,11 @@ def cmd_new(args) -> int:
     thesis = ch / "thesis.md"
     if not thesis.exists():
         thesis.write_text(_THESIS_STUB, encoding="utf-8")
+    Path("gold").mkdir(exist_ok=True)
+    rubric = Path("rubric.md")
+    template = Path("templates") / "rubric.md"
+    if not rubric.exists() and template.exists():
+        rubric.write_text(template.read_text(encoding="utf-8"), encoding="utf-8")
     print(f"created chapter scaffold at {ch}")
     return 0
 

@@ -56,3 +56,12 @@ def test_ingest_skips_unsupported_file_via_cli(tmp_path, monkeypatch, capsys):
     rc = throughline.main(["ingest", "chapter1"])
     assert rc == 0
     assert "ingested 1 source" in capsys.readouterr().out
+
+
+def test_new_seeds_rubric_and_gold(tmp_path: Path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "templates").mkdir()
+    (tmp_path / "templates" / "rubric.md").write_text("# Rubric\n", encoding="utf-8")
+    throughline.main(["new", "chapter1"])
+    assert (tmp_path / "rubric.md").exists()
+    assert (tmp_path / "gold").is_dir()
