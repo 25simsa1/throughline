@@ -20,10 +20,11 @@ def _default_transport(url: str, payload: dict | None) -> dict:
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req, timeout=600) as resp:
+        with urllib.request.urlopen(req, timeout=1800) as resp:
             return json.loads(resp.read().decode("utf-8"))
-    except urllib.error.URLError as e:
-        raise LlmError(f"cannot reach ollama at {url}; is `ollama serve` running? ({e})")
+    # a socket read timeout raises bare TimeoutError on 3.13, not URLError
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        raise LlmError(f"ollama request to {url} failed; is `ollama serve` running? ({e})")
 
 
 class OllamaClient:
@@ -67,6 +68,10 @@ class OllamaClient:
                 "stream": False,
                 "options": {"temperature": 0.2},
             }
+            # thinking models burn minutes of budget before the schema-constrained
+            # answer starts; the thinking adds nothing under constrained decoding
+            if model.split(":")[0] in ("qwen3", "deepseek-r1"):
+                payload["think"] = False
             if schema is not None:
                 payload["format"] = schema
             r = self.transport(f"{self.host}/api/chat", payload)

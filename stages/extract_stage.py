@@ -7,7 +7,7 @@ import store
 import verify
 from llm import LlmError
 
-BATCH_CHARS = 6000
+BATCH_CHARS = 3000
 
 UNIT_SCHEMA = {
     "type": "object",

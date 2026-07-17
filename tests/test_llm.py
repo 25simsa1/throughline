@@ -80,3 +80,19 @@ def test_embed_returns_vectors(monkeypatch):
     vecs = _client(ft).embed(["a", "b"])
     assert vecs == [[0.1, 0.2], [0.3, 0.4]]
     assert ft.calls[-1][1]["model"] == llm.EMBED_MODEL
+
+
+def test_generate_disables_thinking_for_qwen3(monkeypatch):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "qwen3:14b")
+    ft = FakeTransport()
+    ft.add_chat_json({"a": 1})
+    _client(ft).generate("p", schema={"type": "object"})
+    assert ft.calls[-1][1]["think"] is False
+
+
+def test_generate_leaves_thinking_alone_for_granite(monkeypatch):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "granite3.3:8b")
+    ft = FakeTransport()
+    ft.add_chat_json({"a": 1})
+    _client(ft).generate("p", schema={"type": "object"})
+    assert "think" not in ft.calls[-1][1]
