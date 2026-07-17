@@ -45,4 +45,4 @@ Every quote is still machine-verified against the sources. Connections from a lo
 
 The quote verifier matches within a single segment (a page or section). A quote that spans two segments, for example across a page break, will be flagged unverified. Trim such a quote to a single page or section to verify it.
 
-The draft quote check only machine-verifies double-quoted spans of 4 or more characters, so single-quoted or very short spans are not checked and still need a human eye.
+The draft quote check machine-verifies spans in double quotes and in curly single-quote pairs, both 4 or more characters. Straight single-quoted spans and spans under 4 characters are not machine-checked and still need a human eye.

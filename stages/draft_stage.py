@@ -14,9 +14,13 @@ DRAFT_SCHEMA = {
     "required": ["draft_markdown"],
 }
 
-# matches spans in straight (U+0022) or curly (U+201C/U+201D) double quotes;
+# matches spans in straight (U+0022) or curly (U+201C/U+201D) double quotes,
+# and curly single-quote pairs (U+2018...U+2019, distinct from apostrophes);
 # written with escapes on purpose, do not "simplify" to literal quote characters
-_QUOTE_RE = re.compile('[“"]([^”"]{4,300})[”"]')
+_QUOTE_RE = re.compile(
+    '[“"]([^”"]{4,300})[”"]'
+    '|‘([^’]{4,300})’'
+)
 
 DRAFT_PROMPT = """You are drafting one paragraph of scholarly prose for a book chapter, realizing the connection below.
 
@@ -34,11 +38,12 @@ Rules
 - Any text you place inside double quotes MUST be copied character for character from the connection's evidence quotes (shorter contiguous sub-spans are fine). Never invent a quotation.
 - Cite as the rubric directs (author-date in running prose).
 - Let the connection's tensions show, do not sand them off.
+- Always use double quotation marks for quoted material, never single quotation marks, so the machine check can verify every quote.
 """
 
 
 def quoted_spans(text: str) -> list[str]:
-    return [m.group(1) for m in _QUOTE_RE.finditer(text)]
+    return [m.group(1) or m.group(2) for m in _QUOTE_RE.finditer(text)]
 
 
 def check_quotes(text: str, evidence_quotes: list[str]) -> list[str]:

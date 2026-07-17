@@ -20,6 +20,17 @@ def test_curly_quoted_invented_span_is_caught():
     assert draft_stage.check_quotes(text, ["memory is social"]) == ["an invented curly line"]
 
 
+def test_curly_single_quoted_invented_span_is_caught():
+    text = 'Prose quoting ‘an invented single-curly line’ confidently.'
+    assert draft_stage.quoted_spans(text) == ["an invented single-curly line"]
+    assert draft_stage.check_quotes(text, ["memory is social"]) == ["an invented single-curly line"]
+
+
+def test_apostrophes_are_not_treated_as_quotes():
+    text = "The archive’s catalog and the neighborhood’s stories differ."
+    assert draft_stage.quoted_spans(text) == []
+
+
 def _chapter(tmp_path: Path):
     report = {"connections": [{
         "id": "C1", "move": "T. M.", "sources_involved": ["a"],

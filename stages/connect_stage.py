@@ -91,6 +91,7 @@ Produce one connection object.
 - "move" is a short title, then a period, then a one-sentence statement of the connective idea.
 - "interpretation" argues the connection in 120 to 250 words and must go beyond summarizing either source, proposing a claim neither makes alone.
 - "tensions" must honestly name where the connection strains.
+- In "interpretation" and "tensions", never refer to units by number. Name the sources and quote or paraphrase the text itself.
 - "sources_involved" lists the source_ids you actually drew on.
 - "novelty" and "confidence" are 0 to 1.
 """
