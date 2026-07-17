@@ -5,6 +5,7 @@ from pathlib import Path
 import schemas
 import store
 import verify
+from llm import LlmError
 
 BATCH_CHARS = 6000
 
@@ -79,6 +80,8 @@ def _batches(segments, limit=BATCH_CHARS):
 
 
 def _validate_units(obj, source_id, allowed_locs):
+    if not isinstance(obj.get("units"), list):
+        return ["reply must be an object with a top-level 'units' array"]
     errors = []
     for i, u in enumerate(obj.get("units", [])):
         if isinstance(u, dict):
@@ -95,24 +98,27 @@ def run_extract(chapter_dir: Path, client, *, model: str | None = None,
     model = model or client.pick_model()
     summary = {}
     for src in store.load_segments(chapter_dir):
-        units = []
-        for batch in _batches(src.segments):
-            locs = [s.loc for s in batch]
-            pages = "\n\n".join(f"[{s.loc}]\n{s.text}" for s in batch)
-            per_batch = max(4, max_units_per_source // max(1, len(src.segments) // max(1, len(batch))))
-            obj = client.generate(
-                EXTRACT_PROMPT.format(source_id=src.source_id, n=per_batch,
-                                      locs=", ".join(locs), pages=pages),
-                schema=UNIT_SCHEMA,
-                validate=lambda o, sid=src.source_id, al=set(locs): _validate_units(o, sid, al),
-                model=model,
-            )
-            units.extend(obj["units"])
-        units = units[:max_units_per_source]
-        store.save_units(chapter_dir, src.source_id, units)
-        verify.verify_units_file(chapter_dir, src.source_id)
-        kept, dropped = _repair_or_drop(chapter_dir, src, client, model)
-        summary[src.source_id] = {"kept": kept, "dropped": dropped}
+        try:
+            units = []
+            for batch in _batches(src.segments):
+                locs = [s.loc for s in batch]
+                pages = "\n\n".join(f"[{s.loc}]\n{s.text}" for s in batch)
+                per_batch = max(4, max_units_per_source // max(1, len(src.segments) // max(1, len(batch))))
+                obj = client.generate(
+                    EXTRACT_PROMPT.format(source_id=src.source_id, n=per_batch,
+                                          locs=", ".join(locs), pages=pages),
+                    schema=UNIT_SCHEMA,
+                    validate=lambda o, sid=src.source_id, al=set(locs): _validate_units(o, sid, al),
+                    model=model,
+                )
+                units.extend(obj["units"])
+            units = units[:max_units_per_source]
+            store.save_units(chapter_dir, src.source_id, units)
+            verify.verify_units_file(chapter_dir, src.source_id)
+            kept, dropped = _repair_or_drop(chapter_dir, src, client, model)
+            summary[src.source_id] = {"kept": kept, "dropped": dropped}
+        except LlmError as e:
+            summary[src.source_id] = {"kept": 0, "dropped": 0, "error": str(e)}
     return summary
 
 

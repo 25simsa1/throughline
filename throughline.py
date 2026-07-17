@@ -104,9 +104,14 @@ def cmd_extract(args) -> int:
     except llm.LlmError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+    rc = 0
     for sid, r in summary.items():
-        print(f"{sid}: {r['kept']} unit(s) kept, {r['dropped']} dropped")
-    return 0
+        if r.get("error"):
+            print(f"{sid}: FAILED, {r['error']}", file=sys.stderr)
+            rc = 1
+        else:
+            print(f"{sid}: {r['kept']} unit(s) kept, {r['dropped']} dropped")
+    return rc
 
 
 def main(argv: list[str] | None = None) -> int:
