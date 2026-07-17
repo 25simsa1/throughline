@@ -10,7 +10,7 @@ import llm
 import schemas
 import store
 import verify
-from stages import connect_stage, extract_stage
+from stages import connect_stage, extract_stage, draft_stage
 
 _THESIS_STUB = "# Chapter thesis\n\nWrite the chapter thesis and theme note here.\n"
 
@@ -127,6 +127,24 @@ def cmd_connect(args) -> int:
     return 0
 
 
+def cmd_draft(args) -> int:
+    ch = _chapter_dir(args.chapter)
+    if not (ch / "report.json").exists() or not (ch / "report.md").exists():
+        print("error: no report found; run connect first", file=sys.stderr)
+        return 1
+    try:
+        client = llm.OllamaClient()
+        drafted = draft_stage.run_draft(ch, client, model=args.model)
+    except llm.LlmError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    if not drafted:
+        print("no connections are marked keep in report.md")
+    for cid in drafted:
+        print(f"drafted {cid} -> drafts/{cid}.md")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="throughline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -145,6 +163,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--top-k", type=int, default=12)
     p.add_argument("--max-connections", type=int, default=6)
     p.set_defaults(func=cmd_connect)
+    p = sub.add_parser("draft")
+    p.add_argument("chapter")
+    p.add_argument("--model", default=None)
+    p.set_defaults(func=cmd_draft)
     args = parser.parse_args(argv)
     return args.func(args)
 
