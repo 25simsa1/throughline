@@ -1,0 +1,44 @@
+THROUGHLINE
+===========
+
+This folder is a tool that reads your sources (PDFs, EPUBs, photos of
+pages), finds connections across them with verified quotations, and
+drafts prose for the connections you decide to keep. Everything runs
+on your own computer. Nothing you put in ever leaves it.
+
+FIRST TIME ONLY
+---------------
+1. Right-click (or hold Control and click) the file called
+       Install Throughline
+   and choose Open, then Open again. Your Mac asks because the file
+   arrived over the internet, that is all. You only do this once.
+2. A window walks you through setup by itself. It downloads the AI
+   parts, a few gigabytes, so give it 20 to 45 minutes. When it says
+   ALL DONE, close it.
+
+EVERY TIME AFTER THAT
+---------------------
+Double-click
+       Throughline
+and type numbers. That is the whole interface.
+  1 starts a chapter and opens a folder, drop your sources in it.
+  2 reads the sources. Slow, an hour for a big stack. Leave it open.
+  3 finds connections and opens the report for you.
+  In the report, change "Decision: candidate" to "keep" or "drop".
+  4 writes drafts for your keeps.
+
+WHAT TO TRUST
+-------------
+Every quotation is machine-checked, word for word, against your
+sources. A quote it cannot verify is flagged, never presented as
+evidence. If a draft ever quotes something that is not in the
+evidence, the draft carries a red warning naming it.
+
+Two honest notes. Page numbers refer to PDF pages, so map them
+before citing. And this free version's connections are solid but a
+notch below what Simon sends you from the assisted version, so think
+of this as your reading assistant, and of Simon's rounds as the
+polished pass.
+
+If anything confuses you, email Simon. A screenshot of the window
+is always enough.
