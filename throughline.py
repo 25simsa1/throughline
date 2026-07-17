@@ -10,7 +10,7 @@ import llm
 import schemas
 import store
 import verify
-from stages import extract_stage
+from stages import connect_stage, extract_stage
 
 _THESIS_STUB = "# Chapter thesis\n\nWrite the chapter thesis and theme note here.\n"
 
@@ -114,6 +114,19 @@ def cmd_extract(args) -> int:
     return rc
 
 
+def cmd_connect(args) -> int:
+    ch = _chapter_dir(args.chapter)
+    try:
+        client = llm.OllamaClient()
+        n = connect_stage.run_connect(ch, client, model=args.model,
+                                      top_k=args.top_k, max_connections=args.max_connections)
+    except (llm.LlmError, ValueError) as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    print(f"wrote {n} connection(s) to report.md; mark Decision lines keep or drop, then run draft")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="throughline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -126,6 +139,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("chapter")
     p.add_argument("--model", default=None)
     p.set_defaults(func=cmd_extract)
+    p = sub.add_parser("connect")
+    p.add_argument("chapter")
+    p.add_argument("--model", default=None)
+    p.add_argument("--top-k", type=int, default=12)
+    p.add_argument("--max-connections", type=int, default=6)
+    p.set_defaults(func=cmd_connect)
     args = parser.parse_args(argv)
     return args.func(args)
 
