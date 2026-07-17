@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 import render
@@ -13,7 +14,9 @@ DRAFT_SCHEMA = {
     "required": ["draft_markdown"],
 }
 
-_QUOTE_RE = re.compile(r'[""]([^""]{4,300})[""]')
+# matches spans in straight (U+0022) or curly (U+201C/U+201D) double quotes;
+# written with escapes on purpose, do not "simplify" to literal quote characters
+_QUOTE_RE = re.compile('[“"]([^”"]{4,300})[”"]')
 
 DRAFT_PROMPT = """You are drafting one paragraph of scholarly prose for a book chapter, realizing the connection below.
 
@@ -101,4 +104,9 @@ def run_draft(chapter_dir: Path, client, *, model: str | None = None) -> list[st
         path = chapter_dir / "drafts" / f"{conn['id']}.md"
         path.write_text("\n".join(out), encoding="utf-8")
         drafted.append(conn["id"])
+    known = {c["id"] for c in report.get("connections", [])}
+    for cid, d in decisions.items():
+        if d.get("decision") == "keep" and cid not in known:
+            print(f"warning: {cid} is marked keep in report.md but has no entry in report.json",
+                  file=sys.stderr)
     return drafted

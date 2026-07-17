@@ -7,11 +7,17 @@ import llm
 
 
 def test_quoted_spans_and_check():
-    text = 'He says "memory is social" and also "recall is collective" and "made up".'
+    text = 'He says "memory is social" and also “recall is collective” and "made up".'
     spans = draft_stage.quoted_spans(text)
     assert "memory is social" in spans and "recall is collective" in spans
     bad = draft_stage.check_quotes(text, ["Alpha memory is social beta", "recall is collective"])
     assert bad == ["made up"]
+
+
+def test_curly_quoted_invented_span_is_caught():
+    text = 'Prose quoting “an invented curly line” confidently.'
+    assert draft_stage.quoted_spans(text) == ["an invented curly line"]
+    assert draft_stage.check_quotes(text, ["memory is social"]) == ["an invented curly line"]
 
 
 def _chapter(tmp_path: Path):
@@ -52,3 +58,16 @@ def test_run_draft_flags_unverified_spans(tmp_path, monkeypatch):
     assert drafted == ["C1"]
     text = (ch / "drafts" / "C1.md").read_text(encoding="utf-8")
     assert "UNVERIFIED" in text and "an invented line" in text
+
+
+def test_run_draft_warns_on_keep_without_connection(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "m")
+    ch = _chapter(tmp_path)
+    md = (ch / "report.md").read_text(encoding="utf-8")
+    (ch / "report.md").write_text(md + "\n## C9. Ghost\n\nDecision: keep\n", encoding="utf-8")
+    ft = FakeTransport()
+    ft.add_chat_json({"draft_markdown": 'Prose quoting "memory is social" faithfully.'})
+    client = llm.OllamaClient(host="http://fake", transport=ft)
+    drafted = draft_stage.run_draft(ch, client)
+    assert drafted == ["C1"]
+    assert "C9" in capsys.readouterr().err
