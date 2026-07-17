@@ -18,6 +18,13 @@ def test_pick_model_prefers_qwen_then_granite(monkeypatch):
     assert _client(ft2).pick_model() == "granite3.3:8b"
 
 
+def test_pick_model_returns_matched_variant_tag(monkeypatch):
+    monkeypatch.delenv("THROUGHLINE_MODEL", raising=False)
+    ft = FakeTransport()
+    ft.add("/api/tags", {"models": [{"name": "qwen3:14b-instruct-q4"}]})
+    assert _client(ft).pick_model() == "qwen3:14b-instruct-q4"
+
+
 def test_pick_model_env_override(monkeypatch):
     monkeypatch.setenv("THROUGHLINE_MODEL", "mistral:7b")
     assert _client(FakeTransport()).pick_model() == "mistral:7b"

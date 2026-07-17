@@ -109,6 +109,19 @@ def test_run_connect_rejects_fabricated_evidence(tmp_path, monkeypatch):
     assert n == 0
 
 
+def test_run_connect_logs_skipped_pair(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "m")
+    ch = _chapter(tmp_path)
+    ft = FakeTransport()
+    ft.add("/api/embed", {"embeddings": [[1.0, 0.0], [0.9, 0.1]]})
+    for _ in range(3):
+        ft.add_chat_json(_conn_obj(quote_a="a quote that exists nowhere"))
+    client = llm.OllamaClient(host="http://fake", transport=ft)
+    n = connect_stage.run_connect(ch, client, top_k=1, max_connections=3)
+    assert n == 0
+    assert "skipped pair" in capsys.readouterr().err
+
+
 def test_run_connect_raises_on_embedding_count_mismatch(tmp_path, monkeypatch):
     monkeypatch.setenv("THROUGHLINE_MODEL", "m")
     ch = _chapter(tmp_path)

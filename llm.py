@@ -41,8 +41,12 @@ class OllamaClient:
             return env
         names = self.list_models()
         for want in PREFERRED_MODELS:
-            if any(n == want or n.startswith(want) for n in names):
-                return want
+            for n in names:
+                if n == want:
+                    return n
+            for n in names:
+                if n.startswith(want):
+                    return n
         raise LlmError(
             f"no reasoning model found; run `ollama pull {PREFERRED_MODELS[0]}` "
             f"or set THROUGHLINE_MODEL (installed: {names})"

@@ -1,13 +1,13 @@
-import shutil
 from pathlib import Path
 
 import pytest
 from PIL import Image, ImageDraw
 
+from loaders import ocr_text
 from loaders.ocr_loader import OcrLoader
 
 pytestmark = pytest.mark.skipif(
-    shutil.which("tesseract") is None, reason="tesseract binary not installed"
+    not ocr_text.available(), reason="no OCR backend on this machine"
 )
 
 

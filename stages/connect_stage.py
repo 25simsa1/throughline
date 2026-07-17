@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+import sys
 from pathlib import Path
 
 import render
@@ -171,7 +172,9 @@ def run_connect(chapter_dir: Path, client, *, model: str | None = None,
                                       units=_units_block(units, idxs), i=i, j=j),
                 schema=CONN_SCHEMA, validate=validate, model=model, retries=2,
             )
-        except Exception:
+        except LlmError as e:
+            print(f"note: skipped pair ({units[i]['source_id']} x {units[j]['source_id']}): {e}",
+                  file=sys.stderr)
             continue
         obj["status"] = "candidate"
         obj["scholar_note"] = ""

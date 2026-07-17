@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
@@ -20,7 +21,9 @@ def _try_ocrmac(image) -> str | None:
             image.save(p)
             annotations = ocrmac.OCR(str(p), recognition_level="accurate").recognize()
         return "\n".join(a[0] for a in annotations)
-    except Exception:
+    except Exception as e:
+        print(f"warning: apple vision ocr failed ({e.__class__.__name__}: {e}); falling back",
+              file=sys.stderr)
         return None
 
 

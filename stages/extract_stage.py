@@ -137,7 +137,7 @@ def _repair_or_drop(chapter_dir: Path, src, client, model) -> tuple[int, int]:
                     schema=REPAIR_SCHEMA, model=model, retries=0,
                 )
                 u["quote"] = fix.get("quote", u["quote"])
-            except Exception:
+            except LlmError:
                 pass
     store.save_units(chapter_dir, src.source_id, units)
     verify.verify_units_file(chapter_dir, src.source_id)
