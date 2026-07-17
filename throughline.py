@@ -6,9 +6,11 @@ import sys
 from pathlib import Path
 
 import ingest
+import llm
 import schemas
 import store
 import verify
+from stages import extract_stage
 
 _THESIS_STUB = "# Chapter thesis\n\nWrite the chapter thesis and theme note here.\n"
 
@@ -91,6 +93,22 @@ def cmd_status(args) -> int:
     return 0
 
 
+def cmd_extract(args) -> int:
+    ch = _chapter_dir(args.chapter)
+    if not (ch / "store" / "segments.json").exists():
+        print(f"error: chapter '{args.chapter}' not ingested yet; run 'ingest' first", file=sys.stderr)
+        return 1
+    try:
+        client = llm.OllamaClient()
+        summary = extract_stage.run_extract(ch, client, model=args.model)
+    except llm.LlmError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 1
+    for sid, r in summary.items():
+        print(f"{sid}: {r['kept']} unit(s) kept, {r['dropped']} dropped")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="throughline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -99,6 +117,10 @@ def main(argv: list[str] | None = None) -> int:
         p = sub.add_parser(name)
         p.add_argument("chapter")
         p.set_defaults(func=fn)
+    p = sub.add_parser("extract")
+    p.add_argument("chapter")
+    p.add_argument("--model", default=None)
+    p.set_defaults(func=cmd_extract)
     args = parser.parse_args(argv)
     return args.func(args)
 
