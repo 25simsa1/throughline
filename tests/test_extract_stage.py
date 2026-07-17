@@ -97,3 +97,15 @@ def test_extract_records_error_and_continues_past_failing_source(tmp_path, monke
     result = extract_stage.run_extract(tmp_path, _client(ft))
     assert "error" in result["s1"]
     assert result["s2"] == {"kept": 1, "dropped": 0}
+
+
+def test_extract_resume_skips_existing_units(tmp_path, monkeypatch):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "m")
+    ch = _chapter(tmp_path)
+    store.save_units(ch, "s1", [
+        {"source_id": "s1", "kind": "claim", "statement": "x",
+         "quote": "Memory is reconstructive", "loc": "p.1", "verified": True}])
+    ft = FakeTransport()  # no queued responses, so any model call would blow up
+    result = extract_stage.run_extract(ch, _client(ft), resume=True)
+    assert result["s1"]["kept"] == 1
+    assert result["s1"]["skipped"] is True

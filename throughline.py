@@ -100,7 +100,8 @@ def cmd_extract(args) -> int:
         return 1
     try:
         client = llm.OllamaClient()
-        summary = extract_stage.run_extract(ch, client, model=args.model)
+        summary = extract_stage.run_extract(ch, client, model=args.model,
+                                            resume=args.resume)
     except llm.LlmError as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
@@ -109,6 +110,8 @@ def cmd_extract(args) -> int:
         if r.get("error"):
             print(f"{sid}: FAILED, {r['error']}", file=sys.stderr)
             rc = 1
+        elif r.get("skipped"):
+            print(f"{sid}: {r['kept']} unit(s) already extracted, skipped")
         else:
             print(f"{sid}: {r['kept']} unit(s) kept, {r['dropped']} dropped")
     return rc
@@ -156,6 +159,8 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("extract")
     p.add_argument("chapter")
     p.add_argument("--model", default=None)
+    p.add_argument("--resume", action="store_true",
+                   help="skip sources that already have a units file")
     p.set_defaults(func=cmd_extract)
     p = sub.add_parser("connect")
     p.add_argument("chapter")

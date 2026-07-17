@@ -96,10 +96,14 @@ def _validate_units(obj, source_id, allowed_locs):
 
 
 def run_extract(chapter_dir: Path, client, *, model: str | None = None,
-                max_units_per_source: int = 20) -> dict:
+                max_units_per_source: int = 20, resume: bool = False) -> dict:
     model = model or client.pick_model()
     summary = {}
     for src in store.load_segments(chapter_dir):
+        if resume and (chapter_dir / "store" / f"{src.source_id}.units.json").exists():
+            existing = store.load_units(chapter_dir, src.source_id)
+            summary[src.source_id] = {"kept": len(existing), "dropped": 0, "skipped": True}
+            continue
         try:
             units = []
             for batch in _batches(src.segments):
