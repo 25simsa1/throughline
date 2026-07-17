@@ -8,6 +8,7 @@ import render
 import schemas
 import store
 import verify
+from llm import LlmError
 
 
 def cosine(a: list[float], b: list[float]) -> float:
@@ -145,6 +146,10 @@ def run_connect(chapter_dir: Path, client, *, model: str | None = None,
     if len(units) < 2:
         raise ValueError("need at least two verified units across sources; run extract first")
     vectors = client.embed([f'{u["statement"]} {u["quote"]}' for u in units])
+    if len(vectors) != len(units):
+        raise LlmError(
+            f"embedding backend returned {len(vectors)} vector(s) for {len(units)} unit(s)"
+        )
     pairs = shortlist_pairs(units, vectors, k=top_k)
     thesis, rubric, gold = _load_context(chapter_dir)
     conns = []
@@ -155,7 +160,8 @@ def run_connect(chapter_dir: Path, client, *, model: str | None = None,
         allowed = [units[n] for n in idxs]
 
         def validate(obj, allowed=allowed):
-            errs = [e for e in schemas.validate_connection({**obj, "id": "tmp"}) if "'id'" not in e]
+            # temp id satisfies the id-required check; real ids are assigned after ranking
+            errs = schemas.validate_connection({**obj, "id": "tmp"})
             errs += _match_evidence(obj, allowed)
             return errs
 
@@ -182,5 +188,10 @@ def run_connect(chapter_dir: Path, client, *, model: str | None = None,
         json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     (chapter_dir / "report.md").write_text(
         render.render_report_md(report, chapter_dir.name), encoding="utf-8")
-    verify.verify_report_file(chapter_dir)
+    r = verify.verify_report_file(chapter_dir)
+    if r["unverified_evidence"]:
+        raise LlmError(
+            f"{r['unverified_evidence']} evidence item(s) failed verbatim verification "
+            "after write; report.json/report.md left on disk for inspection but must not be trusted"
+        )
     return len(conns)

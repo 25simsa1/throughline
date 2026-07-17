@@ -1,6 +1,8 @@
 import json
 
+import pytest
 import store
+import verify
 from models import Segment, Source
 from stages import connect_stage
 from tests.fakes import FakeTransport
@@ -105,3 +107,26 @@ def test_run_connect_rejects_fabricated_evidence(tmp_path, monkeypatch):
     client = llm.OllamaClient(host="http://fake", transport=ft)
     n = connect_stage.run_connect(ch, client, top_k=1, max_connections=3)
     assert n == 0
+
+
+def test_run_connect_raises_on_embedding_count_mismatch(tmp_path, monkeypatch):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "m")
+    ch = _chapter(tmp_path)
+    ft = FakeTransport()
+    ft.add("/api/embed", {"embeddings": [[1.0, 0.0]]})  # one vector for two units
+    client = llm.OllamaClient(host="http://fake", transport=ft)
+    with pytest.raises(llm.LlmError):
+        connect_stage.run_connect(ch, client, top_k=1)
+
+
+def test_run_connect_surfaces_unverified_evidence(tmp_path, monkeypatch):
+    monkeypatch.setenv("THROUGHLINE_MODEL", "m")
+    ch = _chapter(tmp_path)
+    ft = FakeTransport()
+    ft.add("/api/embed", {"embeddings": [[1.0, 0.0], [0.9, 0.1]]})
+    ft.add_chat_json(_conn_obj())
+    client = llm.OllamaClient(host="http://fake", transport=ft)
+    monkeypatch.setattr(connect_stage.verify, "verify_report_file",
+                        lambda c: {"unverified_evidence": 2})
+    with pytest.raises(llm.LlmError):
+        connect_stage.run_connect(ch, client, top_k=1)
