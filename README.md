@@ -21,6 +21,28 @@ python3 -m venv .venv
 
 Every quote is verified verbatim against its source. Anything unverifiable is flagged UNVERIFIED and never trusted.
 
+## Local autopilot
+
+The reasoning stages can run fully locally on Ollama, no Claude session needed.
+
+Setup, one time. Install Ollama, then
+```
+ollama pull qwen3:14b
+ollama pull granite-embedding:30m
+```
+If qwen3:14b is missing the tool falls back to granite3.3:8b. Set THROUGHLINE_MODEL to force a model.
+
+Run
+```
+python throughline.py extract chapter1
+python throughline.py connect chapter1
+# edit report.md, mark each Decision line keep or drop
+python throughline.py draft chapter1
+```
+Every quote is still machine-verified against the sources. Connections from a local model are serviceable but shallower than the Claude skill's, so use the skill for the connections that must impress.
+
 ## Known limitations
 
 The quote verifier matches within a single segment (a page or section). A quote that spans two segments, for example across a page break, will be flagged unverified. Trim such a quote to a single page or section to verify it.
+
+The draft quote check only machine-verifies double-quoted spans of 4 or more characters, so single-quoted or very short spans are not checked and still need a human eye.

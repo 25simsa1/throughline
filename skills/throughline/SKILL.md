@@ -16,6 +16,8 @@ Orchestrates the reasoning stages of Throughline. Deterministic work (ingest, ve
 
 Resolve `<chapter>` to `chapters/<chapter>`. Always read `rubric.md` and every file in `gold/` first, and hold them as the standard for this scholar.
 
+`extract`, `connect`, and `draft` also exist as fully local CLI commands (`python throughline.py extract <chapter>`, and so on) running on Ollama instead of Claude. Both paths write and verify the same files, share the same quote verifier, and this skill stays the higher-quality path when the connect and draft output needs to impress.
+
 ## extract
 
 1. Run `python throughline.py ingest <chapter>` if `store/segments.json` is missing.
