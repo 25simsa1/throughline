@@ -19,9 +19,11 @@ UNIT_SCHEMA = {
                 "properties": {
                     "source_id": {"type": "string"},
                     "kind": {"type": "string", "enum": ["claim", "concept", "quote"]},
-                    "statement": {"type": "string"},
-                    "quote": {"type": "string"},
-                    "loc": {"type": "string"},
+                    "statement": {"type": "string", "minLength": 1},
+                    # minLength blocks the empty-string quotes qwen3 emitted on dense
+                    # pages, which satisfied "required" but failed unit validation
+                    "quote": {"type": "string", "minLength": 8},
+                    "loc": {"type": "string", "minLength": 1},
                     "theme_tags": {"type": "array", "items": {"type": "string"}},
                 },
                 "required": ["source_id", "kind", "statement", "quote", "loc"],
@@ -33,7 +35,7 @@ UNIT_SCHEMA = {
 
 REPAIR_SCHEMA = {
     "type": "object",
-    "properties": {"quote": {"type": "string"}},
+    "properties": {"quote": {"type": "string", "minLength": 8}},
     "required": ["quote"],
 }
 
