@@ -10,7 +10,7 @@ mkdir -p "$PKG_DIR"
 
 cp -R loaders stages templates "$PKG_DIR/"
 cp models.py store.py ingest.py schemas.py verify.py render.py llm.py \
-   throughline.py menu.py "$PKG_DIR/"
+   graph.py throughline.py menu.py "$PKG_DIR/"
 cp "package/Install Throughline.command" "package/Throughline.command" \
    "package/READ ME FIRST.txt" "$PKG_DIR/"
 chmod +x "$PKG_DIR/Install Throughline.command" "$PKG_DIR/Throughline.command"

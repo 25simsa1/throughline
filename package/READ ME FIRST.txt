@@ -26,6 +26,7 @@ and type numbers. That is the whole interface.
   3 finds connections and opens the report for you.
   In the report, change "Decision: candidate" to "keep" or "drop".
   4 writes drafts for your keeps.
+  5 makes a picture of the connections and opens it in your browser.
 
 WHAT TO TRUST
 -------------

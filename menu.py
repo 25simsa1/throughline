@@ -152,6 +152,21 @@ def do_draft():
         say("label every sentence as verified evidence or interpretation.")
 
 
+def do_graph():
+    ch = pick_chapter()
+    if not ch:
+        return
+    if not (CHAPTERS / ch / "report.json").exists():
+        say("No connections yet for this chapter. Choose 3 first.")
+        return
+    rc = run(["graph", ch])
+    if rc == 0:
+        subprocess.run(["open", str(CHAPTERS / ch / "map.html")])
+        say()
+        say("The picture just opened in your browser. Kept connections are")
+        say("solid, dropped ones are dashed and faded.")
+
+
 def do_status():
     ch = pick_chapter()
     if not ch:
@@ -177,12 +192,13 @@ def main():
         say("  2. Read my sources        (slow, leave the window open)")
         say("  3. Find connections       (opens the report when done)")
         say("  4. Write drafts for my keeps")
-        say("  5. Check on a chapter")
+        say("  5. Make a picture of the connections")
+        say("  6. Check on a chapter")
         say("  0. Quit")
         say()
         choice = ask("Type a number and press Return: ")
         actions = {"1": do_new, "2": do_read, "3": do_connect,
-                   "4": do_draft, "5": do_status}
+                   "4": do_draft, "5": do_graph, "6": do_status}
         if choice == "0":
             say("Bye.")
             return

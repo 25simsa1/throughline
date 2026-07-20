@@ -148,6 +148,17 @@ def cmd_draft(args) -> int:
     return 0
 
 
+def cmd_graph(args) -> int:
+    ch = _chapter_dir(args.chapter)
+    if not (ch / "report.json").exists():
+        print("error: no report found; run connect first", file=sys.stderr)
+        return 1
+    import graph
+    out = graph.build_map(ch)
+    print(f"wrote the connection map to {out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="throughline")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -172,6 +183,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("chapter")
     p.add_argument("--model", default=None)
     p.set_defaults(func=cmd_draft)
+    p = sub.add_parser("graph")
+    p.add_argument("chapter")
+    p.set_defaults(func=cmd_graph)
     args = parser.parse_args(argv)
     return args.func(args)
 
