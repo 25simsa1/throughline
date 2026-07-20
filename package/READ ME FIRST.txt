@@ -6,6 +6,10 @@ pages), finds connections across them with verified quotations, and
 drafts prose for the connections you decide to keep. Everything runs
 on your own computer. Nothing you put in ever leaves it.
 
+You only ever need three things in this folder, "Install Throughline",
+"Throughline", and this note. There is also an "app" folder that holds
+the working parts. You can ignore it completely, do not open it.
+
 FIRST TIME ONLY
 ---------------
 1. Right-click (or hold Control and click) the file called

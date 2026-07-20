@@ -1,6 +1,6 @@
 #!/bin/bash
 # One-time setup. Double-click me (the first time, right-click and choose Open).
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/app" || { echo "Could not find the app folder next to me."; read -r -p "Press Return to close."; exit 1; }
 clear
 echo "========================================================"
 echo "  THROUGHLINE SETUP"
