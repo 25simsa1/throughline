@@ -99,6 +99,18 @@ def do_new():
     say("  1. A folder. Drop your sources in it (PDFs, EPUBs, even photos).")
     say("  2. A text file. Replace its contents with your thesis note.")
     say("When both are done, come back here and choose 2.")
+    return name
+
+
+def first_run():
+    say()
+    say("It looks like you have not started a chapter yet, so let's make")
+    say("your first one right now. A chapter is simply one set of sources")
+    say("you want connected together.")
+    say()
+    do_new()
+    say()
+    say("That's it, you are set up. The menu is below from now on.")
 
 
 def do_read():
@@ -186,6 +198,8 @@ def main():
     say("  It reads your sources, proposes connections with")
     say("  verified quotations, and drafts what you keep.")
     say("=" * 56)
+    if not chapters():
+        first_run()
     while True:
         say()
         say("  1. Start a new chapter")
