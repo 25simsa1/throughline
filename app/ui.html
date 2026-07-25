@@ -27,6 +27,10 @@
   .chap:hover{background:var(--accent-weak)}
   .chap.on{background:var(--accent-weak);box-shadow:inset 3px 0 0 var(--accent)}
   .chap.newbtn{color:var(--accent);font-weight:650}
+  .newform{padding:6px 10px}
+  .newform input{width:100%;border:1px solid var(--accent);border-radius:8px;padding:9px 10px;background:var(--bg);color:inherit;font-size:14px}
+  .newform .newrow{display:flex;gap:6px;margin-top:6px}
+  .newform .newrow .run{flex:1;padding:8px 0}
   .chap.on.main{box-shadow:inset 3px 0 0 var(--accent)}
   .chap .ptitle{font-weight:600}
   .chap.dim .ptitle{font-weight:550;color:var(--muted)}
@@ -137,12 +141,27 @@ async function loadChapters(){
 function paintDots(name,stages){const el=document.getElementById("dots-"+cssid(name));if(el)el.innerHTML=STEPS.map(s=>`<span class="dot ${stages[s.key]?"done":""}"></span>`).join("");}
 function banner(msg){const b=document.getElementById("banner");b.textContent=msg;b.classList.add("show");}
 
-async function newProject(){
-  const name=prompt("Name your project (for example, chapter 1)");
-  if(!name) return;
-  const r=await j("/api/new",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
-  if(r.error){alert(r.error);return;}
-  current=r.name; await loadChapters(); selectChapter(r.name);
+function newProject(){
+  const box=document.getElementById("chapters");
+  const nb=box.querySelector(".newbtn");
+  if(!nb) return;
+  const form=document.createElement("div");
+  form.className="newform";
+  form.innerHTML='<input id="newname" placeholder="Name it, e.g. chapter 1" autocomplete="off">'+
+    '<div class="newrow"><button class="run" id="newok">Create</button>'+
+    '<button class="run ghost" id="newcancel">Cancel</button></div>';
+  nb.replaceWith(form);
+  const inp=document.getElementById("newname"); inp.focus();
+  const submit=async()=>{
+    const name=inp.value.trim();
+    if(!name){inp.focus();return;}
+    const r=await j("/api/new",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
+    if(r.error){alert(r.error);inp.focus();return;}
+    current=r.name; await loadChapters(); selectChapter(r.name);
+  };
+  document.getElementById("newok").onclick=submit;
+  document.getElementById("newcancel").onclick=loadChapters;
+  inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();submit();}else if(e.key==="Escape"){loadChapters();}};
 }
 
 async function selectChapter(name){
