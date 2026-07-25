@@ -5,12 +5,14 @@ import json
 import sys
 from pathlib import Path
 
-import ingest
 import llm
 import schemas
 import store
 import verify
 from stages import connect_stage, extract_stage, draft_stage
+# `ingest` pulls in PyMuPDF, so it is imported lazily inside cmd_ingest only.
+# that keeps `new`, `verify`, `status`, `extract`, `connect`, `draft`, `graph`
+# working even if the native PDF library is missing or arch-mismatched.
 
 _THESIS_STUB = "# Chapter thesis\n\nWrite the chapter thesis and theme note here.\n"
 
@@ -36,6 +38,7 @@ def cmd_new(args) -> int:
 
 
 def cmd_ingest(args) -> int:
+    import ingest  # lazy: only this command needs PyMuPDF
     try:
         sources = ingest.ingest_chapter(_chapter_dir(args.chapter))
     except ingest.IngestError as e:

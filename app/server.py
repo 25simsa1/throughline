@@ -92,6 +92,29 @@ def _python() -> str:
 
 PYTHON = _python()
 
+
+# On Apple Silicon a server launched under Rosetta runs x86_64, and then its
+# child python is x86_64 too, so the arm64 PyMuPDF library refuses to load and
+# ingest dies. Probe once at startup: if the interpreter can't import fitz as-is
+# but can under `arch -arm64`, prefix every child with that. No-op everywhere the
+# import already works (clean installs, Intel Macs).
+def _spawn_cmd() -> list[str]:
+    def can(prefix: list[str]) -> bool:
+        try:
+            return subprocess.run(prefix + [PYTHON, "-c", "import fitz"],
+                                  capture_output=True, timeout=120).returncode == 0
+        except Exception:  # noqa: BLE001
+            return False
+    if can([]):
+        return [PYTHON]
+    if can(["arch", "-arm64"]):
+        print("(forcing arm64 for the PDF library)")
+        return ["arch", "-arm64", PYTHON]
+    return [PYTHON]  # give up; the real error will surface in the job log
+
+
+RUN = _spawn_cmd()
+
 # ---- background jobs ---------------------------------------------------------
 _jobs: dict[str, dict] = {}
 _jobs_lock = threading.Lock()
@@ -113,7 +136,7 @@ def start_job(chapter: str, stages: list[str]) -> str:
             for stage in stages:
                 with _jobs_lock:
                     _jobs[jid]["lines"].append(f"$ throughline {stage} {chapter}")
-                proc = subprocess.Popen([PYTHON, "throughline.py", stage, chapter],
+                proc = subprocess.Popen(RUN + ["throughline.py", stage, chapter],
                                         cwd=str(REPO), stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT, text=True, bufsize=1)
                 for line in proc.stdout:  # type: ignore[union-attr]
@@ -363,11 +386,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"error": "please enter a project name"}, 400)
             if name in list_chapters():
                 return self._json({"error": "a project with that name already exists"}, 400)
-            r = subprocess.run([PYTHON, "throughline.py", "new", name],
+            r = subprocess.run(RUN + ["throughline.py", "new", name],
                                cwd=str(REPO), capture_output=True, text=True)
-            return self._json({"name": name, "ok": r.returncode == 0,
-                               "out": (r.stdout + r.stderr).strip()},
-                              200 if r.returncode == 0 else 500)
+            if r.returncode != 0:
+                detail = (r.stdout + r.stderr).strip() or "unknown error"
+                return self._json({"error": "could not create project: " + detail[-400:]}, 500)
+            return self._json({"name": name, "ok": True})
         if u.path == "/api/criteria":
             ch = body.get("chapter", "")
             text = body.get("text", "")
