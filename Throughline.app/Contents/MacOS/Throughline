@@ -1,0 +1,7 @@
+#!/bin/bash
+# Throughline.app launcher. Repo is the folder that contains this .app.
+DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO="$(cd "$DIR/../../.." && pwd)"
+cd "$REPO" || exit 1
+if [ -x ".venv/bin/python" ]; then PY=".venv/bin/python"; else PY="python3"; fi
+exec "$PY" app/server.py

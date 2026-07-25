@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Throughline</title>
+<style>
+  :root{
+    --bg:#f6f5f2; --panel:#fff; --ink:#22201d; --muted:#7b756c; --line:#e7e3db;
+    --accent:#3f6f57; --accent-weak:#e7f0ea; --keep:#2f7a52; --drop:#a23b2a;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#1a1917;--panel:#232120;--ink:#ece8e1;--muted:#a39c90;--line:#332f2b;
+      --accent:#6fae8c;--accent-weak:#26302b;--keep:#6fae8c;--drop:#d98a76;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 18px rgba(0,0,0,.35);}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 26px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:14px}
+  header h1{margin:0;font-size:19px;font-weight:650}
+  header .sub{color:var(--muted);font-size:13px}
+  .wrap{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 60px)}
+  aside{border-right:1px solid var(--line);padding:16px 12px}
+  aside h2{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:6px 10px 12px}
+  .chap{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:550}
+  .chap:hover{background:var(--accent-weak)}
+  .chap.on{background:var(--accent-weak);box-shadow:inset 3px 0 0 var(--accent)}
+  .chap.newbtn{color:var(--accent);font-weight:650}
+  .chap.on.main{box-shadow:inset 3px 0 0 var(--accent)}
+  .chap .ptitle{font-weight:600}
+  .chap.dim .ptitle{font-weight:550;color:var(--muted)}
+  .chap .badge{font-size:9px;font-weight:700;letter-spacing:.5px;padding:1px 6px;border-radius:6px;text-transform:uppercase;margin-left:6px;vertical-align:middle}
+  .badge.main{background:var(--accent);color:#fff}
+  .badge.variant{background:var(--accent-weak);color:var(--accent)}
+  .badge.example{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  .chap .pnote{font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+  .grpdiv{font-size:10px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:16px 10px 6px;border-top:1px solid var(--line);padding-top:12px}
+  .chap .dots{margin-top:5px;display:flex;gap:4px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--line)}
+  .dot.done{background:var(--accent)}
+  main{padding:24px 30px;max-width:900px}
+  .muted{color:var(--muted)}
+  .setup{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:var(--shadow);margin-bottom:22px}
+  .setup h3{margin:0 0 3px;font-size:16px}
+  .setup .hint{color:var(--muted);font-size:12.5px;margin-bottom:14px}
+  .setup label.block{display:block;font-weight:600;font-size:13px;margin:16px 0 6px}
+  .setup textarea{width:100%;min-height:74px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--bg);color:inherit;font:14px/1.5 inherit;resize:vertical}
+  .files{font-size:13px;color:var(--muted);margin:8px 0}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:12px 0 2px}
+  .dropzone{border:2px dashed var(--accent);border-radius:12px;padding:26px 16px;text-align:center;cursor:pointer;color:var(--accent);background:var(--accent-weak);font-weight:600;transition:background .15s,border-color .15s,transform .05s}
+  .dropzone:hover{filter:brightness(1.02)}
+  .dropzone.over{background:var(--accent);color:#fff;border-style:solid;transform:scale(1.01)}
+  .dropzone .dzsub{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:6px}
+  .dropzone.over .dzsub{color:#e7f0ea}
+  .dropzone input{display:none}
+  button.run{border:0;border-radius:9px;padding:9px 12px;font-weight:600;font-size:14px;cursor:pointer;background:var(--accent);color:#fff}
+  button.run:hover{filter:brightness(1.05)}
+  button.run.ghost{background:var(--accent-weak);color:var(--accent)}
+  button.run.big{font-size:15px;padding:12px 22px;margin-top:16px}
+  .steps{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+  .step{flex:1 1 130px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px}
+  .step .n{font-size:10.5px;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+  .step .t{font-weight:650}
+  .step .pill{align-self:flex-start;font-size:10.5px;padding:2px 8px;border-radius:20px;font-weight:600}
+  .step .pill.done{background:var(--accent-weak);color:var(--accent)}
+  .step .pill.todo{color:var(--muted);border:1px solid var(--line)}
+  .step button{border:0;background:transparent;color:var(--accent);font-weight:600;cursor:pointer;font-size:13px;text-align:left;padding:0}
+  h3.advanced{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:4px 0 10px}
+  .console{background:#12100e;color:#d7f0e2;border-radius:12px;padding:14px 16px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;max-height:280px;overflow:auto;margin-bottom:22px;display:none}
+  .console.show{display:block}
+  h3.section{font-size:16px;margin:26px 0 12px}
+  .conn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .conn.keep{box-shadow:inset 4px 0 0 var(--keep),var(--shadow)}
+  .conn.drop{box-shadow:inset 4px 0 0 var(--drop),var(--shadow);opacity:.62}
+  .conn .cid{font-size:12px;color:var(--muted);font-weight:600}
+  .conn .move{font-weight:600;margin:3px 0 8px}
+  .conn .interp{font-size:14px;margin-bottom:8px}
+  .conn .meta{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+  .conn details{font-size:13px;margin:8px 0}
+  .conn summary{cursor:pointer;color:var(--accent);font-weight:600}
+  .ev{border-left:2px solid var(--line);padding:4px 0 4px 12px;margin:8px 0;font-size:13px}
+  .ev .loc{color:var(--muted);font-size:12px}
+  .decide{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .decide button{border:1px solid var(--line);background:transparent;color:inherit;border-radius:8px;padding:7px 16px;font-weight:600;cursor:pointer;font-size:14px}
+  .decide button.keep.on{background:var(--keep);color:#fff;border-color:var(--keep)}
+  .decide button.drop.on{background:var(--drop);color:#fff;border-color:var(--drop)}
+  .decide input{flex:1;min-width:160px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--bg);color:inherit;font-size:13px}
+  .saved{font-size:12px;color:var(--accent);opacity:0;transition:opacity .2s}
+  .saved.show{opacity:1}
+  .empty{color:var(--muted);padding:40px 0;text-align:center}
+  .banner{background:#b4532f;color:#fff;padding:8px 26px;font-size:13px;display:none}
+  .banner.show{display:block}
+</style>
+</head>
+<body>
+<div class="banner" id="banner"></div>
+<header><h1>Throughline</h1><span class="sub">connection studio</span></header>
+<div class="wrap">
+  <aside><h2>Projects</h2><div id="chapters"></div></aside>
+  <main id="main"><div class="empty">Make a new project, or pick one on the left.</div></main>
+</div>
+
+<script>
+const STEPS = [
+  {key:"ingest",  n:"1", t:"Ingest"},
+  {key:"extract", n:"2", t:"Extract"},
+  {key:"connect", n:"3", t:"Connect"},
+  {key:"select",  n:"4", t:"Review"},
+  {key:"draft",   n:"5", t:"Draft"},
+];
+let current=null, jobTimer=null;
+const j=async(u,o)=>(await fetch(u,o)).json();
+
+async function loadChapters(){
+  const data=await j("/api/chapters");
+  if(data.python_ok===false){banner("Setup needed on this Mac. See app/SETUP_FOR_HER.md.");}
+  const box=document.getElementById("chapters");box.innerHTML="";
+  const nb=document.createElement("button");nb.className="chap newbtn";nb.textContent="+ New project";nb.onclick=newProject;box.appendChild(nb);
+  const BADGE={main:"main",variant:"auto",example:"example"};
+  let dividerShown=false;
+  data.chapters.forEach(c=>{
+    if(c.kind==="example" && !dividerShown){
+      const div=document.createElement("div");div.className="grpdiv";div.textContent="Examples & drafts";box.appendChild(div);dividerShown=true;
+    }
+    const b=document.createElement("button");
+    b.className="chap"+(c.name===current?" on":"")+(c.kind==="main"?" main":"")+(c.kind==="example"?" dim":"");
+    b.dataset.name=c.name;
+    b.innerHTML=`<span class="ptitle">${escapeHtml(c.title)}</span><span class="badge ${c.kind}">${BADGE[c.kind]||c.kind}</span>`+
+                (c.note?`<div class="pnote">${escapeHtml(c.note)}</div>`:"")+
+                `<div class="dots" id="dots-${cssid(c.name)}"></div>`;
+    b.onclick=()=>selectChapter(c.name);box.appendChild(b);
+    fetch("/api/chapter?name="+encodeURIComponent(c.name)).then(r=>r.json()).then(dd=>paintDots(c.name,dd.stages));
+  });
+  if(!current && data.chapters.length) selectChapter(data.chapters[0].name);
+}
+function paintDots(name,stages){const el=document.getElementById("dots-"+cssid(name));if(el)el.innerHTML=STEPS.map(s=>`<span class="dot ${stages[s.key]?"done":""}"></span>`).join("");}
+function banner(msg){const b=document.getElementById("banner");b.textContent=msg;b.classList.add("show");}
+
+async function newProject(){
+  const name=prompt("Name your project (for example, chapter 1)");
+  if(!name) return;
+  const r=await j("/api/new",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
+  if(r.error){alert(r.error);return;}
+  current=r.name; await loadChapters(); selectChapter(r.name);
+}
+
+async function selectChapter(name){
+  current=name;
+  document.querySelectorAll(".chap").forEach(c=>c.classList.toggle("on",c.dataset&&c.dataset.name===name));
+  renderChapter(await j("/api/chapter?name="+encodeURIComponent(name)));
+  paintDots(name,(await j("/api/chapter?name="+encodeURIComponent(name))).stages);
+}
+
+function renderChapter(d){
+  const m=document.getElementById("main");
+  const stepCards=STEPS.map(s=>{
+    const done=d.stages[s.key], runnable=s.key!=="select";
+    const act=runnable?`<button onclick="runStage('${s.key}')">${done?"run again":"run"}</button>`
+                      :`<button onclick="document.getElementById('review').scrollIntoView({behavior:'smooth'})">go to review</button>`;
+    return `<div class="step"><div class="n">Step ${s.n}</div><div class="t">${s.t}</div>
+      <span class="pill ${done?"done":"todo"}">${done?"done":"not yet"}</span>${act}</div>`;
+  }).join("");
+  m.innerHTML=`
+    <div class="muted" style="margin-bottom:12px">${d.counts.sources} sources · ${d.counts.units} extracted · ${d.counts.connections} connections · ${d.counts.keep} kept / ${d.counts.drop} dropped</div>
+    <div class="setup">
+      <h3>${escapeHtml(d.title||d.name)}</h3>
+      <div class="hint">Add your sources, say what you want to find (or let it decide), then find connections.</div>
+      <div class="dropzone" id="dropzone"
+           ondragover="event.preventDefault();this.classList.add('over')"
+           ondragenter="event.preventDefault();this.classList.add('over')"
+           ondragleave="this.classList.remove('over')"
+           ondrop="event.preventDefault();this.classList.remove('over');uploadFileList(event.dataTransfer.files)"
+           onclick="this.querySelector('input').click()">
+        <div>Drop files here, or click to choose</div>
+        <div class="dzsub">pdf, txt, md, epub, jpg, png, tiff</div>
+        <input type="file" multiple accept=".md,.txt,.pdf,.epub,.jpg,.jpeg,.png,.tiff" onchange="uploadFileList(this.files);this.value=''">
+      </div>
+      <div class="files" id="srcfiles">${d.sources.length?("Added: "+d.sources.map(escapeHtml).join(", ")):"No files added yet."}</div>
+      <label class="block">What connections are you looking for?</label>
+      <textarea id="criteria" placeholder="For example: tensions in how each source defines fairness. Leave blank to let it find connections on its own.">${escapeHtml(criteriaFromThesis(d.thesis))}</textarea>
+      <label class="chk"><input type="checkbox" id="autoc"> Just find connections on its own (ignore the box above)</label>
+      <button class="run big" onclick="findConnections()">Find connections</button>
+    </div>
+    <h3 class="advanced">Run steps individually (optional)</h3>
+    <div class="steps">${stepCards}</div>
+    <div class="console" id="console"></div>
+    <div id="review"></div>`;
+  renderReview(d);
+}
+
+function criteriaFromThesis(t){
+  if(!t) return "";
+  if(t.includes("Surface the strongest and most surprising")) return "";
+  return t.replace(/^#.*\r?\n+/, "").trim();
+}
+
+async function uploadFileList(files){
+  if(!files||!files.length) return;
+  if(!current){alert("Pick or make a project first.");return;}
+  const fd=new FormData(); fd.append("chapter",current);
+  for(const f of files) fd.append("file",f);
+  const sf=document.getElementById("srcfiles"); if(sf) sf.textContent="uploading…";
+  const d=await (await fetch("/api/upload",{method:"POST",body:fd})).json();
+  if(d.error){alert(d.error);return;}
+  if(d.rejected&&d.rejected.length) alert("Skipped unsupported files: "+d.rejected.join(", ")+"\nAllowed: pdf, txt, md, epub, jpg, png, tiff");
+  selectChapter(current);
+}
+// stop the browser from opening a file if a drop misses the zone
+window.addEventListener("dragover",e=>e.preventDefault());
+window.addEventListener("drop",e=>e.preventDefault());
+
+async function findConnections(){
+  const text=document.getElementById("criteria").value;
+  const auto=document.getElementById("autoc").checked;
+  const d=await j("/api/chapter?name="+encodeURIComponent(current));
+  if(!d.sources.length){alert("Add at least one source file first.");return;}
+  await j("/api/criteria",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chapter:current,text,auto})});
+  const con=document.getElementById("console");con.classList.add("show");con.textContent="starting… (extract and connect can take a few minutes)";
+  const res=await j("/api/run_all",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chapter:current})});
+  if(res.error){con.textContent="error: "+res.error;return;}
+  pollJob(res.job_id);
+}
+async function runStage(stage){
+  const con=document.getElementById("console");con.classList.add("show");con.textContent="starting…";
+  const res=await j("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chapter:current,stage})});
+  if(res.error){con.textContent="error: "+res.error;return;}
+  pollJob(res.job_id);
+}
+function pollJob(job_id){
+  if(jobTimer)clearInterval(jobTimer);
+  const con=document.getElementById("console");
+  jobTimer=setInterval(async()=>{
+    const jd=await j("/api/job?id="+job_id);
+    con.textContent=jd.lines.join("\n");con.scrollTop=con.scrollHeight;
+    if(!jd.running){clearInterval(jobTimer);selectChapter(current);}
+  },900);
+}
+
+function renderReview(d){
+  const r=document.getElementById("review");
+  if(!d.connections.length){r.innerHTML="";return;}
+  r.innerHTML=`<h3 class="section">Connections — keep or drop each one</h3>`+d.connections.map(connCard).join("");
+}
+function connCard(c){
+  const ev=(c.evidence||[]).map(e=>`<div class="ev">“${escapeHtml(e.quote||"")}”<div class="loc">${escapeHtml((e.source_id||"")+" · "+(e.loc||""))}</div></div>`).join("");
+  return `<div class="conn ${c.decision}" id="card-${c.id}">
+    <div class="cid">${c.id} · novelty ${fmt(c.novelty)} · confidence ${fmt(c.confidence)}</div>
+    <div class="move">${escapeHtml(c.move)}</div>
+    <div class="interp">${escapeHtml(c.interpretation)}</div>
+    ${c.tensions?`<div class="meta"><b>Tension:</b> ${escapeHtml(c.tensions)}</div>`:""}
+    <details><summary>Evidence (${(c.evidence||[]).length})</summary>${ev}</details>
+    <div class="decide">
+      <button class="keep ${c.decision==="keep"?"on":""}" onclick="decide('${c.id}','keep')">Keep</button>
+      <button class="drop ${c.decision==="drop"?"on":""}" onclick="decide('${c.id}','drop')">Drop</button>
+      <input id="note-${c.id}" placeholder="note (optional)" value="${escapeAttr(c.note||"")}" onblur="decide('${c.id}',null)">
+      <span class="saved" id="saved-${c.id}">saved</span></div></div>`;
+}
+async function decide(id,decision){
+  const card=document.getElementById("card-"+id);
+  const cur=decision||(card.classList.contains("keep")?"keep":card.classList.contains("drop")?"drop":"candidate");
+  const note=document.getElementById("note-"+id).value;
+  const res=await j("/api/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chapter:current,id,decision:cur,note})});
+  if(res.ok){
+    card.classList.remove("keep","drop");if(cur!=="candidate")card.classList.add(cur);
+    card.querySelector(".keep").classList.toggle("on",cur==="keep");
+    card.querySelector(".drop").classList.toggle("on",cur==="drop");
+    const s=document.getElementById("saved-"+id);s.classList.add("show");setTimeout(()=>s.classList.remove("show"),1200);
+    fetch("/api/chapter?name="+encodeURIComponent(current)).then(r=>r.json()).then(dd=>paintDots(current,dd.stages));
+  }
+}
+function fmt(x){return x==null?"—":Number(x).toFixed(2);}
+function cssid(s){return s.replace(/[^a-zA-Z0-9_-]/g,"_");}
+function escapeHtml(s){return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+function escapeAttr(s){return escapeHtml(s).replace(/"/g,"&quot;");}
+loadChapters();
+</script>
+</body>
+</html>

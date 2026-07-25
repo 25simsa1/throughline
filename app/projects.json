@@ -1,0 +1,6 @@
+{
+  "genai-linguistics":            {"title": "GenAI & Linguistics",         "kind": "main",    "note": "your 3 papers on AI and language"},
+  "genai-linguistics-autopilot":  {"title": "GenAI & Linguistics (auto)",  "kind": "variant", "note": "same 3 papers, found automatically"},
+  "first-chapter":                {"title": "GenAI & Linguistics (old)",   "kind": "example", "note": "unfinished older version, ignore"},
+  "autopilot-demo":               {"title": "Demo",                        "kind": "example", "note": "built-in example, ignore"}
+}
