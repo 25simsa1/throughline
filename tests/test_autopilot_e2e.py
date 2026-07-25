@@ -11,7 +11,7 @@ def test_full_autopilot_pipeline(tmp_path, monkeypatch):
     monkeypatch.setenv("THROUGHLINE_MODEL", "m")
     monkeypatch.chdir(tmp_path)
     throughline.main(["new", "chapter1"])
-    ch = tmp_path / "chapters" / "chapter1"
+    ch = tmp_path / "projects" / "chapter1"
     (ch / "sources" / "a.md").write_text("Alpha says memory is social.", encoding="utf-8")
     (ch / "sources" / "b.md").write_text("Beta says recall is collective.", encoding="utf-8")
     (ch / "thesis.md").write_text("Memory is collective.", encoding="utf-8")

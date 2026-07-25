@@ -16,7 +16,7 @@ _THESIS_STUB = "# Chapter thesis\n\nWrite the chapter thesis and theme note here
 
 
 def _chapter_dir(name: str) -> Path:
-    return Path("chapters") / name
+    return Path("projects") / name
 
 
 def cmd_new(args) -> int:

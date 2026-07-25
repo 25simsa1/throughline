@@ -21,9 +21,21 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-REPO = Path(__file__).resolve().parent.parent
-APP = REPO / "app"
-CHAPTERS = REPO / "chapters"
+HERE = Path(__file__).resolve().parent  # server.py, ui.html, projects.json live together here
+
+
+def _find_repo() -> Path:
+    # the dir that holds throughline.py, .venv, and the projects folder. in the
+    # repo that is HERE's parent, in her packaged copy it is HERE itself.
+    for cand in [HERE, *HERE.parents]:
+        if (cand / "throughline.py").exists():
+            return cand
+    return HERE
+
+
+REPO = _find_repo()
+APP = HERE
+CHAPTERS = REPO / "projects"
 STAGES = ("ingest", "extract", "connect", "draft", "verify")
 ALLOWED_EXT = {".md", ".txt", ".pdf", ".epub", ".jpg", ".jpeg", ".png", ".tiff"}
 HOST, PORT = "127.0.0.1", 8756

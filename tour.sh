@@ -87,7 +87,7 @@ pause
 
 banner "STOP 3  store.py + ingest.py, the disk is the truth"
 say "After ingest, no stage ever reopens a PDF. Everything reads and"
-say "writes JSON under chapters/<name>/store/, so every stage can rerun."
+say "writes JSON under projects/<name>/store/, so every stage can rerun."
 show_def ingest.py ingest_chapter
 pause
 
@@ -163,19 +163,19 @@ banner "HANDS-ON  watch the guardrail catch a lie"
 if [ "${TOUR_AUTO:-0}" = "1" ]; then
   demo=n
 else
-  read -r -p "Run the live demo? Creates a throwaway chapters/tour-demo, needs no model. [y/N] " demo
+  read -r -p "Run the live demo? Creates a throwaway projects/tour-demo, needs no model. [y/N] " demo
 fi
 if [ "${demo:-n}" = "y" ] || [ "${demo:-n}" = "Y" ]; then
   PY=.venv/bin/python
   [ -x "$PY" ] || PY=python3
   $PY throughline.py new tour-demo
-  printf 'Memory is reconstructive, not a recording.\n' > chapters/tour-demo/sources/a.md
+  printf 'Memory is reconstructive, not a recording.\n' > projects/tour-demo/sources/a.md
   $PY throughline.py ingest tour-demo
   say "Now we hand-write two units, one honest, one FABRICATED..."
   $PY - <<'PYEOF'
 import store
 from pathlib import Path
-ch = Path("chapters/tour-demo")
+ch = Path("projects/tour-demo")
 store.save_units(ch, "a", [
     {"source_id": "a", "kind": "claim", "statement": "memory is rebuilt",
      "quote": "Memory is reconstructive", "loc": "para.1"},
@@ -192,7 +192,7 @@ PYEOF
   if [ "${TOUR_AUTO:-0}" != "1" ]; then
     read -r -p "Delete the throwaway chapter? [Y/n] " del
     if [ "${del:-y}" != "n" ] && [ "${del:-y}" != "N" ]; then
-      rm -rf chapters/tour-demo && say "cleaned up."
+      rm -rf projects/tour-demo && say "cleaned up."
     fi
   fi
 else

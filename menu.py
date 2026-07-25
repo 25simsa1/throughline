@@ -13,7 +13,7 @@ from pathlib import Path
 import throughline
 
 ROOT = Path(__file__).resolve().parent
-CHAPTERS = ROOT / "chapters"
+CHAPTERS = ROOT / "projects"
 MODEL_FILE = ROOT / "model.txt"
 
 
