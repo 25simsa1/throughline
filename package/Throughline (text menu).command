@@ -1,6 +1,7 @@
 #!/bin/bash
-# Double-click me to open Throughline in your web browser.
+# A simple text-menu version, in case the browser window does not open.
 cd "$(dirname "$0")/app" || { echo "Could not find the app folder next to me."; read -r -p "Press Return to close."; exit 1; }
+clear
 if [ ! -x ".venv/bin/python" ]; then
   echo "One thing first, please double-click 'Install Throughline'"
   echo "and let it finish. You only ever do that once."
@@ -8,12 +9,6 @@ if [ ! -x ".venv/bin/python" ]; then
   read -r -p "Press Return to close."
   exit 1
 fi
-clear
-echo "Throughline is opening in your web browser."
+./.venv/bin/python menu.py
 echo
-echo "Keep THIS window open while you work. When you are finished,"
-echo "close this window to shut Throughline down."
-echo
-./.venv/bin/python server.py
-echo
-read -r -p "Throughline stopped. Press Return to close."
+read -r -p "Press Return to close."

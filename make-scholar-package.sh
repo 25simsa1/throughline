@@ -11,14 +11,18 @@ mkdir -p "$APP"
 
 # the only three things she should ever see, at the top level
 cp "package/Install Throughline.command" "package/Throughline.command" \
-   "package/READ ME FIRST.txt" "$PKG_DIR/"
-chmod +x "$PKG_DIR/Install Throughline.command" "$PKG_DIR/Throughline.command"
+   "package/Throughline (text menu).command" "package/READ ME FIRST.txt" "$PKG_DIR/"
+chmod +x "$PKG_DIR/Install Throughline.command" "$PKG_DIR/Throughline.command" \
+   "$PKG_DIR/Throughline (text menu).command"
 
 # everything else lives inside app/ where she never has to look
 cp -R loaders stages templates "$APP/"
 cp models.py store.py ingest.py schemas.py verify.py render.py llm.py \
    graph.py throughline.py menu.py "$APP/"
-mkdir -p "$APP/chapters" "$APP/gold"
+# the desktop ui (web app) she actually clicks into
+cp app/server.py app/ui.html "$APP/"
+printf '{}\n' > "$APP/projects.json"    # she starts with no saved project labels
+mkdir -p "$APP/projects" "$APP/gold"
 [ -f rubric.md ] && cp rubric.md "$APP/"
 [ -d gold ] && cp -R gold/. "$APP/gold/" 2>/dev/null || true
 find "$PKG_DIR" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true

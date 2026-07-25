@@ -6,9 +6,9 @@ pages), finds connections across them with verified quotations, and
 drafts prose for the connections you decide to keep. Everything runs
 on your own computer. Nothing you put in ever leaves it.
 
-You only ever need three things in this folder, "Install Throughline",
-"Throughline", and this note. There is also an "app" folder that holds
-the working parts. You can ignore it completely, do not open it.
+You only ever need "Install Throughline", "Throughline", and this note.
+There is also an "app" folder that holds the working parts, and a
+"Throughline (text menu)" as a backup. You can ignore both of those.
 
 FIRST TIME ONLY
 ---------------
@@ -24,13 +24,19 @@ EVERY TIME AFTER THAT
 ---------------------
 Double-click
        Throughline
-and type numbers. That is the whole interface.
-  1 starts a chapter and opens a folder, drop your sources in it.
-  2 reads the sources. Slow, an hour for a big stack. Leave it open.
-  3 finds connections and opens the report for you.
-  In the report, change "Decision: candidate" to "keep" or "drop".
-  4 writes drafts for your keeps.
-  5 makes a picture of the connections and opens it in your browser.
+and it opens in your web browser. Keep the small black window that
+appears open while you work, closing it shuts Throughline down.
+
+In the browser:
+  Click "+ New project", type a name, and it appears in the list.
+  Click your project, then drag your papers into the upload box.
+  Say what you are looking for (or let it decide), then "Find
+    connections". Reading a big stack is slow, so give it time.
+  Keep or drop each connection it proposes, right on the page.
+
+If the browser window ever does not open, double-click
+"Throughline (text menu)" instead, it does the same steps as a
+simple numbered menu.
 
 WHAT TO TRUST
 -------------
