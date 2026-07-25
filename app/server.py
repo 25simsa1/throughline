@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import threading
 import time
@@ -390,6 +391,22 @@ class Handler(BaseHTTPRequestHandler):
             ok = set_decision(body.get("chapter", ""), body.get("id", ""),
                               body.get("decision", ""), body.get("note", ""))
             return self._json({"ok": ok}, 200 if ok else 400)
+        if u.path == "/api/delete":
+            name = body.get("name", "")
+            if name not in list_chapters():
+                return self._json({"error": "unknown project"}, 404)
+            shutil.rmtree(CHAPTERS / name, ignore_errors=True)
+            return self._json({"ok": True})
+        if u.path == "/api/removefile":
+            ch = body.get("chapter", "")
+            fn = Path(body.get("file", "")).name  # basename only, no path traversal
+            if ch not in list_chapters():
+                return self._json({"error": "unknown project"}, 404)
+            f = CHAPTERS / ch / "sources" / fn
+            if fn and f.is_file():
+                f.unlink()
+                return self._json({"ok": True})
+            return self._json({"error": "no such file"}, 404)
         return self._json({"error": "not found"}, 404)
 
 

@@ -23,7 +23,17 @@
   .wrap{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 60px)}
   aside{border-right:1px solid var(--line);padding:16px 12px}
   aside h2{font-size:11px;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin:6px 10px 12px}
-  .chap{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:11px 12px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:550}
+  .chap{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:10px 10px;border-radius:9px;cursor:pointer;font-size:14.5px;font-weight:500}
+  .chap .pdot{width:15px;height:15px;border-radius:50%;border:1.6px solid var(--muted);flex:none}
+  .chap.on .pdot{border-color:var(--accent)}
+  .chap .ptitle{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:550}
+  .chap .del{opacity:0;color:var(--muted);font-size:17px;line-height:1;padding:1px 6px;border-radius:6px;flex:none}
+  .chap:hover .del{opacity:.65}
+  .chap .del:hover{opacity:1;color:var(--drop);background:var(--accent-weak)}
+  .srcrow{display:inline-flex;align-items:center;gap:6px;background:var(--accent-weak);color:var(--ink);border-radius:8px;padding:5px 7px 5px 11px;margin:0 7px 7px 0;font-size:12.5px}
+  .srcrow .rmf{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;border-radius:5px}
+  .srcrow .rmf:hover{color:var(--drop)}
+  .files{margin:10px 0 2px}
   .chap:hover{background:var(--accent-weak)}
   .chap.on{background:var(--accent-weak);box-shadow:inset 3px 0 0 var(--accent)}
   .chap.newbtn{color:var(--accent);font-weight:650}
@@ -121,22 +131,32 @@ async function loadChapters(){
   if(data.python_ok===false){banner("Setup needed on this Mac. See app/SETUP_FOR_HER.md.");}
   const box=document.getElementById("chapters");box.innerHTML="";
   const nb=document.createElement("button");nb.className="chap newbtn";nb.textContent="+ New project";nb.onclick=newProject;box.appendChild(nb);
-  const BADGE={main:"main",variant:"auto",example:"example"};
-  let dividerShown=false;
   data.chapters.forEach(c=>{
-    if(c.kind==="example" && !dividerShown){
-      const div=document.createElement("div");div.className="grpdiv";div.textContent="Examples & drafts";box.appendChild(div);dividerShown=true;
-    }
     const b=document.createElement("button");
-    b.className="chap"+(c.name===current?" on":"")+(c.kind==="main"?" main":"")+(c.kind==="example"?" dim":"");
+    b.className="chap"+(c.name===current?" on":"");
     b.dataset.name=c.name;
-    b.innerHTML=`<span class="ptitle">${escapeHtml(c.title)}</span><span class="badge ${c.kind}">${BADGE[c.kind]||c.kind}</span>`+
-                (c.note?`<div class="pnote">${escapeHtml(c.note)}</div>`:"")+
-                `<div class="dots" id="dots-${cssid(c.name)}"></div>`;
-    b.onclick=()=>selectChapter(c.name);box.appendChild(b);
-    fetch("/api/chapter?name="+encodeURIComponent(c.name)).then(r=>r.json()).then(dd=>paintDots(c.name,dd.stages));
+    b.innerHTML=`<span class="pdot"></span><span class="ptitle">${escapeHtml(c.title)}</span><span class="del" title="Delete this project">×</span>`;
+    b.onclick=()=>selectChapter(c.name);
+    b.querySelector(".del").onclick=(e)=>{e.stopPropagation();deleteProject(c.name,c.title);};
+    box.appendChild(b);
   });
   if(!current && data.chapters.length) selectChapter(data.chapters[0].name);
+}
+
+async function deleteProject(name,title){
+  if(!confirm(`Delete the project "${title||name}"? This removes its papers and results, and cannot be undone.`)) return;
+  const r=await j("/api/delete",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name})});
+  if(r.error){alert(r.error);return;}
+  if(current===name){current=null;document.getElementById("main").innerHTML='<div class="empty">Make a new project, or pick one on the left.</div>';}
+  loadChapters();
+}
+
+async function removeFile(fn){
+  if(!current) return;
+  if(!confirm(`Remove "${fn}" from this project?`)) return;
+  const r=await j("/api/removefile",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chapter:current,file:fn})});
+  if(r.error){alert(r.error);return;}
+  selectChapter(current);
 }
 function paintDots(name,stages){const el=document.getElementById("dots-"+cssid(name));if(el)el.innerHTML=STEPS.map(s=>`<span class="dot ${stages[s.key]?"done":""}"></span>`).join("");}
 function banner(msg){const b=document.getElementById("banner");b.textContent=msg;b.classList.add("show");}
@@ -195,7 +215,7 @@ function renderChapter(d){
         <div class="dzsub">pdf, txt, md, epub, jpg, png, tiff</div>
         <input type="file" multiple accept=".md,.txt,.pdf,.epub,.jpg,.jpeg,.png,.tiff" onchange="uploadFileList(this.files);this.value=''">
       </div>
-      <div class="files" id="srcfiles">${d.sources.length?("Added: "+d.sources.map(escapeHtml).join(", ")):"No files added yet."}</div>
+      <div class="files" id="srcfiles">${d.sources.length?d.sources.map(f=>`<span class="srcrow"><span>${escapeHtml(f)}</span><button class="rmf" data-file="${escapeAttr(f)}" title="Remove this file">×</button></span>`).join(""):"No files added yet."}</div>
       <label class="block">What connections are you looking for?</label>
       <textarea id="criteria" placeholder="For example: tensions in how each source defines fairness. Leave blank to let it find connections on its own.">${escapeHtml(criteriaFromThesis(d.thesis))}</textarea>
       <label class="chk"><input type="checkbox" id="autoc"> Just find connections on its own (ignore the box above)</label>
@@ -205,6 +225,7 @@ function renderChapter(d){
     <div class="steps">${stepCards}</div>
     <div class="console" id="console"></div>
     <div id="review"></div>`;
+  m.querySelectorAll(".rmf").forEach(btn=>btn.onclick=()=>removeFile(btn.dataset.file));
   renderReview(d);
 }
 
