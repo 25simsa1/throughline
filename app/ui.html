@@ -83,6 +83,14 @@
   h3.advanced{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:4px 0 10px}
   .console{background:#12100e;color:#d7f0e2;border-radius:12px;padding:14px 16px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;max-height:280px;overflow:auto;margin-bottom:22px;display:none}
   .console.show{display:block}
+  .jobstatus{display:none;align-items:center;gap:12px;background:var(--accent-weak);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+  .jobstatus.show{display:flex}
+  .jobstatus .spin{width:18px;height:18px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--accent);flex:none;animation:spin .8s linear infinite}
+  .jobstatus.done .spin{border:2.5px solid var(--accent);border-top-color:var(--accent);animation:none}
+  .jobstatus.fail .spin{border-color:var(--drop);border-top-color:var(--drop);animation:none}
+  .jobstatus .jt{font-weight:600;font-size:14.5px}
+  .jobstatus .je{color:var(--muted);font-size:12.5px;margin-top:2px}
+  @keyframes spin{to{transform:rotate(360deg)}}
   h3.section{font-size:16px;margin:26px 0 12px}
   .conn{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
   .conn.keep{box-shadow:inset 4px 0 0 var(--keep),var(--shadow)}
@@ -123,7 +131,36 @@ const STEPS = [
   {key:"select",  n:"4", t:"Review"},
   {key:"draft",   n:"5", t:"Draft"},
 ];
-let current=null, jobTimer=null;
+let current=null, jobTimer=null, jobSources=0, jobStart=0;
+function stageInfo(stage){
+  const N=Math.max(1,jobSources);
+  const map={
+    ingest:{t:"Reading your papers and splitting them into sections.",e:"This is quick, usually under a minute."},
+    extract:{t:"The local AI is reading each paper closely and pulling out the key points. This is the slow part, please leave the window open.",e:`Rough estimate about ${N*2} to ${N*5} minutes for ${N} paper${N>1?"s":""}, longer for dense PDFs.`},
+    connect:{t:"Comparing the papers to each other and drafting the connections.",e:"Usually one to three minutes."},
+    draft:{t:"Writing up the connections you kept.",e:"Usually a minute or two."},
+    verify:{t:"Double-checking that every quote appears word for word in the source.",e:"This is quick, under a minute."},
+  };
+  return map[stage]||{t:"Working…",e:""};
+}
+function activeStage(lines){
+  let stage=null;
+  for(const ln of lines){
+    const m=ln.match(/^\$ throughline (\w+)/);
+    if(m){stage=m[1];continue;}
+    const e=ln.match(/^\[(\w+) exit/);
+    if(e&&e[1]===stage)stage=null;
+  }
+  return stage;
+}
+function fmtElapsed(ms){
+  const s=Math.floor(ms/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+}
+function setStatus(cls,title,extra){
+  const b=document.getElementById("jobstatus");if(!b)return;
+  b.className="jobstatus show"+(cls?" "+cls:"");
+  b.innerHTML=`<span class="spin"></span><div><div class="jt">${title}</div>${extra?`<div class="je">${extra}</div>`:""}</div>`;
+}
 const j=async(u,o)=>(await fetch(u,o)).json();
 
 async function loadChapters(){
@@ -223,8 +260,10 @@ function renderChapter(d){
     </div>
     <h3 class="advanced">Run steps individually (optional)</h3>
     <div class="steps">${stepCards}</div>
+    <div class="jobstatus" id="jobstatus"></div>
     <div class="console" id="console"></div>
     <div id="review"></div>`;
+  jobSources=d.counts.sources||0;
   m.querySelectorAll(".rmf").forEach(btn=>btn.onclick=()=>removeFile(btn.dataset.file));
   renderReview(d);
 }
@@ -270,10 +309,27 @@ async function runStage(stage){
 function pollJob(job_id){
   if(jobTimer)clearInterval(jobTimer);
   const con=document.getElementById("console");
+  jobStart=Date.now();
+  setStatus("","Starting up…","");
   jobTimer=setInterval(async()=>{
     const jd=await j("/api/job?id="+job_id);
     con.textContent=jd.lines.join("\n");con.scrollTop=con.scrollHeight;
-    if(!jd.running){clearInterval(jobTimer);selectChapter(current);}
+    const elapsed="Running for "+fmtElapsed(Date.now()-jobStart)+".";
+    if(jd.running){
+      const stage=activeStage(jd.lines);
+      if(stage){const s=stageInfo(stage);setStatus("",s.t,s.e+"  "+elapsed);}
+      else setStatus("","Starting up…",elapsed);
+    }else{
+      clearInterval(jobTimer);
+      const took=fmtElapsed(Date.now()-jobStart);
+      if(jd.returncode===0){
+        await selectChapter(current);  // re-render to show Review; set the banner after so it survives
+        setStatus("done","Done. Your connections are ready below.","Finished in "+took+".");
+      }else{
+        // leave the failed log on screen (no re-render) so it can be read
+        setStatus("fail","A step ran into a problem.","See the log below for details.");
+      }
+    }
   },900);
 }
 
