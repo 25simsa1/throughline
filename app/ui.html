@@ -136,7 +136,7 @@ function stageInfo(stage){
   const N=Math.max(1,jobSources);
   const map={
     ingest:{t:"Reading your papers and splitting them into sections.",e:"This is quick, usually under a minute."},
-    extract:{t:"The local AI is reading each paper closely and pulling out the key points. This is the slow part, please leave the window open.",e:`Rough estimate about ${N*2} to ${N*5} minutes for ${N} paper${N>1?"s":""}, longer for dense PDFs.`},
+    extract:{t:"The local AI is reading each paper in full and pulling out the key points. This is by far the slowest part, it is normal for it to take a long time. Please just leave it running.",e:`Rough estimate 15 to 40 minutes per paper on a local machine, so roughly ${N*15} to ${N*40} minutes for ${N} paper${N>1?"s":""}. Dense PDFs take longer.`},
     connect:{t:"Comparing the papers to each other and drafting the connections.",e:"Usually one to three minutes."},
     draft:{t:"Writing up the connections you kept.",e:"Usually a minute or two."},
     verify:{t:"Double-checking that every quote appears word for word in the source.",e:"This is quick, under a minute."},

@@ -125,9 +125,15 @@ def start_job(chapter: str, stages: list[str]) -> str:
     """Run one or more throughline stages in sequence as a single streamed job."""
     global _seq
     with _jobs_lock:
+        # if a run for this project is already going, reuse it. the local model
+        # has a single slot, so two stacked runs would deadlock fighting over it.
+        for jid_, rec in _jobs.items():
+            if rec.get("chapter") == chapter and rec.get("running"):
+                return jid_
         _seq += 1
         jid = f"j{_seq}"
-        _jobs[jid] = {"lines": [f"$ {' -> '.join(stages)}  ({chapter})", ""],
+        _jobs[jid] = {"chapter": chapter,
+                      "lines": [f"$ {' -> '.join(stages)}  ({chapter})", ""],
                       "running": True, "returncode": None}
 
     def run():
